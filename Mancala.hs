@@ -5,8 +5,8 @@ module Mancala where
 -- :load Mancala
 --
 
-type Board = ([Int], [Int]) -- number of stones for two players, including stores 
-type Store = (Player, Int) -- index of a player's store in [Int]
+type Board = ([Int], [Int]) -- number of stones in each pocket of the board, including stores 
+type Store = (Player, Int) -- index of a player's store in [Int] (maybe it could just be Int)
 type InternalState = (Board, Store, Store) 
 data Action = Action Int -- index of a selected pocket (non-empty)
          deriving (Ord,Eq)
