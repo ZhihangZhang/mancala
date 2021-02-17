@@ -5,9 +5,12 @@ module Mancala where
 -- :load Mancala
 --
 
-type Board = ([Int], [Int]) -- number of stones in each pocket of the board, including stores 
-type Store = (Player, Int) -- index of a player's store in [Int] (maybe it could just be Int)
-type InternalState = (Board, Store, Store) 
+-- https://endlessgames.com/wp-content/uploads/Mancala_Instructions.pdf
+type Pockets = [Int]
+type Store = Int
+type Side = (Pockets, Store)
+type Board = (Side, Side)  -- essentially ([Int], Int, [Int], Int)
+type InternalState = Board 
 data Action = Action Int -- index of a selected pocket (non-empty)
          deriving (Ord,Eq)
 data State = State InternalState ([Action], [Action])  
@@ -20,9 +23,54 @@ data Result = EndOfGame Double State    -- end of game: value, starting state
 type Game = Action -> State -> Result
 type Player = State -> Action
 
-mancala :: Game
+side_start = ([4, 4, 4, 4, 4, 4], 0)
+actions_start = [Action i | i <- [0..5]] 
+mancala_start = State (side_start, side_start) (actions_start, actions_start) 
 
-win :: InternalState -> Bool
+
+mancala :: Game
+mancala move (State ((my_pockets, my_store), (other_pockets, other_store)) (my_actions, other_actions))
+--update_board :: Action -> Board -> Board
+
+-- Map a list in a circular manner starting from 
+-- a specific position for a certain number of times
+-- This will be used to update board state
+circular_map :: [a] -> Int -> Int -> (a -> a) -> [a]
+circular_map [] _ _ _ = []
+circular_map l _ 0 _ = l
+circular_map l start n f
+  | start < 0 = l
+  | n < 0 = l
+  | start >= len = l
+  | wrap_n <= 0 = zipWith ($) fnList l
+  | otherwise = circular_map (zipWith ($) fnList l) 0 wrap_n f
+ where
+      len = length l
+      fnList = [if (i < start) || (i >= start + n) then id else f | i <- [0..len-1]]
+      wrap_n = start + n - len
+-- Tests
+-- *Mancala> circular_map [1, 2, 3, 4] 1 3 (+1)
+-- [1,3,4,5]
+-- *Mancala> circular_map [1, 2, 3, 4] 1 4 (+1)
+-- [2,3,4,5]
+-- *Mancala> circular_map [1, 2, 3, 4] 1 5 (+1)
+-- [2,4,4,5]
+-- *Mancala> circular_map [1, 2, 3, 4] 0 1 (+1)
+-- [2,2,3,4]
+-- *Mancala> circular_map [1, 2, 3, 4] 0 8 (+1)
+-- [3,4,5,6]
+-- *Mancala> circular_map [1, 2, 3, 4] 0 0 (+1)
+-- [1,2,3,4]
+-- *Mancala> circular_map [] 0 0 (+1)
+-- []
+-- *Mancala> circular_map [] 0 1 (+1)
+-- []
+
+
+
+ 
+--update_available_actions :: Board -> ([Action], [Action]) 
+--win :: Board -> Bool
 
 instance Show Action where
     show (Action i) = show i
