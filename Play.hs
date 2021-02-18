@@ -45,7 +45,7 @@ person_play game (EndofTurn state) opponent ts =
       putStrLn ("State: "++show internal++" choose one of "++show init (fst avail))
       line <- getLine
       let action = (readMaybe line :: Maybe Action)
-      if (action == Nothing) || not ((fromJust action) `elem` [0..5]) || fst(avail)!!(fromJust action) == 0
+      if (action == Nothing) || not ((fromJust action) `elem` [0..5]) || not fst(avail)!!(fromJust action) == 0
         then  -- error; redo
            person_play game (EndofTurn state) opponent ts
         else
