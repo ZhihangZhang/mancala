@@ -223,8 +223,27 @@ capture_pieces end_index (my_old_side, other_old_side) (my_side, other_side)
 -- ([4,4,4,4,0,5,1],[5,5,4,4,4,4,0])
 
 
---update_available_actions :: Board -> ([Action], [Action]) 
---win :: Board -> Bool
+--update_available_actions :: Board -> ([Action], [Action])
+
+win :: Action -> Board -> Bool
+win (Action n) board 
+  | oneSideClear boardAfter = myStore > oppStore
+  | otherwise  = False 
+  where
+   boardAfter = move_pieces (Action n) board
+   finalCount = cleanBoard boardAfter
+   myStore = fst finalCount
+   oppStore = snd finalCount
+
+oneSideClear :: Board -> Bool
+oneSideClear b = all (== 0) (init(fst b)) || all (== 0) (init(snd b))
+
+cleanBoard :: Board -> (Int, Int)
+cleanBoard b = ((sumSide (fst b)), sumSide (snd b))
+
+sumSide :: Side -> Int
+sumSide s = foldr (+) 0 s
+ 
 
 instance Show Action where
     show (Action i) = show i
