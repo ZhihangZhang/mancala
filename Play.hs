@@ -1,12 +1,11 @@
--- CPSC 312 - 2019 - Games in Haskell
 module Play where
 
 -- To run it, try:
 -- ghci
 -- :load Play
 
-import MagicSum
---import CountGame
+import Mancala
+
 import Minimax
 --import Minimax_mem
 import System.IO
@@ -26,9 +25,9 @@ play game start_state opponent ts =
       line <- getLine
       if line == "0"
         then
-            person_play game (ContinueGame start_state) opponent ts
+            person_play game (EndofTurn start_state) opponent ts --Every ContinueGame has been replaced with EndOfGame
         else if line ==  "1"
-             then computer_play game (ContinueGame start_state) opponent ts
+             then computer_play game (EndofTurn start_state) opponent ts
         else if line == "2"
             then return ts
         else play game start_state opponent ts
@@ -40,17 +39,21 @@ person_play game (EndOfGame val start_state) opponent ts =
     newts <- update_tournament_state (-val) ts  -- val is value to computer; -val is value for person
     play game start_state opponent newts
 
-person_play game (ContinueGame state) opponent ts =
+person_play game (EndofTurn state) opponent ts =
    do
       let State internal avail = state
-      putStrLn ("State: "++show internal++" choose one of "++show avail)
+      putStrLn ("State: "++show internal++" choose one of "++show init (fst avail))
       line <- getLine
       let action = (readMaybe line :: Maybe Action)
-      if (action == Nothing) || not ((fromJust action) `elem` avail)
+      if (action == Nothing) || not ((fromJust action) `elem` [0..5]) || fst(avail)!!(fromJust action) == 0
         then  -- error; redo
-           person_play game (ContinueGame state) opponent ts
+           person_play game (EndofTurn state) opponent ts
         else
+		{- if last bead from action lands in a mancala
+			person_play game game (fromJust action) state) opponent ts
+			else
            computer_play game (game (fromJust action) state) opponent ts
+		 -}
 
 
 computer_play :: Game -> Result -> Player -> TournammentState -> IO TournammentState
@@ -61,11 +64,16 @@ computer_play game (EndOfGame val  start_state) opponent ts =
       newts <- update_tournament_state val ts
       play game start_state opponent newts
 
-computer_play game (ContinueGame state) opponent ts =
+computer_play game (EndofTurn state) opponent ts =
       let 
           opponent_move = opponent state
         in
           do
+		  {- if last bead from action lands in a mancala
+				computer_play game (game (fromJust action) state) opponent ts
+			else
+           person_play game game (fromJust action) state) opponent ts
+		 -}
             putStrLn ("The computer chose "++show opponent_move)
             person_play game (game opponent_move state) opponent ts
 
