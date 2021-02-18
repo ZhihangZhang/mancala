@@ -154,7 +154,7 @@ circular_map l start n f
 
 
 
-move_pieces :: Action -> Board -> Board
+move_pieces :: Action -> Board -> Board --needs to also return the index of the last dropped element to make life easier
 move_pieces (Action index) (my_side, other_side) =
   to_board l other_store len
     where
