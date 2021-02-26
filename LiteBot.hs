@@ -12,23 +12,15 @@ getBestAction board avail =
 
 
 {- 
-	ArrayList <Integer> extraTurns = new ArrayList<>();
+
+	int bestCaseIndex = 0;
+	int temp = 0;
 	for(int i = 0; i < avail.length; i++) {
-		if(board[i].getBeads() + i == mancala) {
-			extraTurns.add(i);
+		temp = play(board[i]);
+		if(temp > board[bestCaseIndex]) {
+			bestCaseIndex = i;
 		}
 	}
-	if (!extraTurns.empty()){
-		return (Action) extraTurns.size() - 1;
-	} else {
-		int bestCaseIndex = 0;
-		int temp = 0;
-		for(int i = 0; i < avail.length; i++) {
-			temp = play(board[i]);
-			if(temp > board[bestCaseIndex]) {
-				bestCaseIndex = i;
-			}
-		}
-		return (Action) bestCaseIndex;
-	}
+	return (Action) bestCaseIndex;
+
 -}
