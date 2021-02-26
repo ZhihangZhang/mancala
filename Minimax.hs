@@ -1,76 +1,103 @@
--- CPSC 312 - 2019 - Games in Haskell
 module Minimax where
 
 -- To run it, try:
 -- ghci
 -- :load Minimax
 
-import MagicSum
---import CountGame
+import Mancala
+
+
+import TreeDict
+
+-- try:
+-- as = map Action 
+-- minimax mancala (State ([4,4,4,4,4,4,0],[4,4,4,4,4,4,0]) (as [0,1,2,3,4,5],as [0,1,2,3,4,5])) emptyDict
+
+type Mem = Dict State (Action, Double)
 
 ----   Determining the best move  ---
-minimax:: Game -> State -> (Action, Double)
--- minimax game state   =>  (move,value_to_player)
--- precondition: there are some moves that are available
-minimax game st  =
-      argmax (valueact game st) avail
-      where State _ avail = st
+minimax:: Game -> State -> Mem -> ((Action, Double), Mem)
+-- minimax game state memory  =>  ((move,value_to_player),new_memory)
+minimax game st mem =
+   case getval st mem of
+      Just act_val  -> (act_val,mem)
+      Nothing ->
+        let (act_val,mem1) =
+              argmax_mem (valueact game st) (snd avail) mem
+        in (act_val, (insertval st act_val mem1))
+    where State _ avail = st
 
 -- valueact game st action  is the value of doing action act in state st for game
-valueact :: Game -> State -> Action -> Double
-valueact game st act = value game (game act st)
+valueact :: Game -> State -> Action -> Mem -> (Double,Mem)
+valueact game st act mem = value game (game act st) mem
 
--- value gameminimax magicsum result  = value  for current player after result
-value:: Game -> Result -> Double
-value _  (EndOfGame val _) = val
-value game (ContinueGame st) =  - snd (minimax game st)   -- (action,value) for next player
-                 -- value for current player is negative of value of the other player
 
+-- value game move result = value for current player of the state after move given result
+value:: Game -> Result -> Mem -> (Double,Mem)
+value _  (EndOfGame val _) mem = ((fromIntegral val), mem)
+value game (EndOfTurn st) mem =
+       let ((_,val), mem2) = minimax game st mem
+          in  (-val,mem2)
+		  
+value game (ContinueTurn st) mem =
+       let ((_,val), mem2) = minimax game st mem
+          in  (-val,mem2)
+
+-- argmax_mem f lst mem = ((e, f e), mem1)
+-- where e is an element of lst that has a maximal value for f
+--  updates the memory to mem1. Each call to f can update memory
+argmax_mem :: Ord v => (e -> m -> (v,m)) -> [e] -> m -> ((e,v),m)
+argmax_mem f [e] mem = ((e, v),mem1)
+     where (v,mem1) = f e mem
+argmax_mem f (h:t) mem
+   | fh > ft = ((h,fh),mem2)
+   | otherwise = ((bt, ft),mem2)
+   where
+      ((bt,ft),mem1) = argmax_mem f t mem
+      (fh,mem2) = f h mem1
+
+
+-- For CountGame
+-- :set +s    
+-- minimax countGame count_start emptyDict
+
+-- For MagicSum
 -- to find the best opening move
--- minimax magicsum magicsum_start
+-- res = minimax magicsum magicsum_start emptyDict
+-- (fst res)
+-- stats (snd res)   -- gets the size and depth of the memory
 
---Try (for MagicSum)
-as lst = [Action i | i <- lst]     -- make it easier to type
--- minimax magicsum (State (as [8,5,4], as [1,2,6,9])  (as [3,7]))
--- minimax magicsum (State (as [8,5], as [1,2])  (as [3,4,6,7,9]))
--- minimax magicsum (State (as [1,2], as [4,5,8])  (as [3,4,6,7,9]))
--- minimax magicsum (State (as [1,2,4,5], as [3,7,8,9])  (as [6]))
--- minimax magicsum (State (as [1,2,4,5], as [3,6,8,9])  (as [7]))
--- minimax magicsum (State (as [1,2,5], as [3,6,8,9])  (as [4,7]))
--- minimax magicsum (State (as [1,5], as [3,8])  (as [2,4,6,7,9]))
--- minimax magicsum (State (as [1], as [5,8]) (as [2,3,4,6,7,9])))
--- minimax magicsum (State (as [5,8], as [1,2])  (as [3,4,6,7,9]))
--- minimax magicsum (State (as [5], as [3,8]) (as [1,2,4,6,7,9]))
--- minimax magicsum (State ([], [])  (as [1..9]))
-
+--Try
+-- as = map Action     -- make it easier to type
+-- minimax magicsum (State (as [8,5,4], as [1,2,6,9])  (as [3,7])) emptyDict
+-- minimax magicsum (State (as [2,6,9], as [8,5,4])  (as [1,3,7])) (snd it)
+-- minimax magicsum (State (as [5,4], as [2,6,9])  (as [1,3,7,8])) (snd it)
+-- stats (snd it)
 
 mm_player:: Game -> Player
-mm_player game state = fst ( minimax game state)
+mm_player game state = fst (fst ( minimax game state emptyDict))
 
+{-
 
--- argmax f lst  = (e, f e) for e <- lsts where f e is maximal
---  Note that this does not require the elements of lst to be comparable
--- like  max[(e,f e) <- e in lst] but where only the second elements of pairs are compared in the max.
-argmax :: Ord v => (e -> v) -> [e] -> (e,v)
-argmax f [e] = (e, f e)
-argmax f (h:t) 
-   | fh > ft = (h,fh)
-   | otherwise = (bt, ft)
-   where
-      (bt,ft) = argmax f t
-      fh = f h
+--with import MagicSum and TreeDict (at the top of this file):
+:set +s
+mm = minimax magicsum magicsum_start emptyDict
+fst mm
+stats (snd mm)  
+"Number of elements=294778, Depth=103"
+mm2 = minimax magicsum magicsum_start (snd mm)
+fst mm2
 
---- after surfing the web, I found this is the standard argmaxWithMax
---  http://hackage.haskell.org/package/list-extras-0.4.1.4/docs/Data-List-Extras-Argmax.html
+--with import MagicSum_ord and TreeDict:
+mmo = minimax magicsum magicsum_start emptyDict
+fst mmo
+stats $ snd mmo  -- returns
+"Number of elements=4520, Depth=52"
 
--- Test case:
--- argmax (\x -> 5- (x-2)^2) [0..10]
--- argmax (\x -> 1 + 4*x - x^2) [0..10]
-
--- another implementation
-argmax2 :: Ord v => (e -> v) -> [e] -> (e,v)
-argmax2 f (h:t) =
-   foldr (\ e (et,vt) -> let fe = f e in
-                         if (fe > vt) then (e,fe) else (et,vt))
-         (h, f h) t
-   
+--with import CountGame
+let (cg, is) = createCountGame 20 [1,2,3,5,7] in minimax cg is emptyDict 
+let (cg, is) = createCountGame 21 [1,2,3,5,7] in minimax cg is emptyDict 
+let (cg, is) = createCountGame 100 [1..9] in minimax cg is emptyDict 
+let (cg, is) = createCountGame 101 [2,4,10,14] in minimax cg is emptyDict 
+let (cg, is) = createCountGame 101 [3,5,13,17,37] in minimax cg is emptyDict 
+-}
