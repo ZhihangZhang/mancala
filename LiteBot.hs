@@ -8,12 +8,11 @@ bestMove:: State -> Action
 bestMove (State currBoard avail) = getBestAction currBoard (snd avail)
 
 getBestAction:: Board -> [Action] -> Action
---getBestAction board avail = fst(maximum'(getScores board avail))
 getBestAction board avail
   | noExtraMoves scores = fst(maximum'(getScores board avail))
   | otherwise = getExtraMove (getCoords board avail)
   where 
-   scores = getScores board avail
+   scores = getCoords board avail
   
 
 noExtraMoves :: [(Action,Int)] -> Bool
@@ -36,10 +35,6 @@ getExtraMove :: [(Action, Int)] -> Action
 getExtraMove (x:xs)
   | intAction(fst x) + (snd x) == 6 = (fst x)
   | otherwise = getExtraMove xs
-{-
-maximum' :: Ord a => [a] -> a
-maximum' = foldr1 (\x y ->if x >= y then x else y)
--}
 
 maximum' :: Ord a => [(t, a)] -> (t, a)
 maximum' []     = error "maximum of empty list"
@@ -50,7 +45,7 @@ maximum' (x:xs) = maxTail x xs
           | otherwise   = maxTail (m, n) ps
 
 getScores :: Board -> [Action] -> [(Action, Int)]
-getScores board avail = zip (map Action [0..5]) (init(reverse(getResults board avail (length avail))))
+getScores board avail = zip (map Action [0..5]) (init(reverse(getResults board avail 6)))
 
 getCoords :: Board -> [Action] -> [(Action, Int)]
 getCoords board avail = zip (map Action [0..5]) (get_pockets (fst board))
@@ -61,20 +56,8 @@ getResults board avail len = (get_store (fst(fst (move_pieces (Action len) board
 {-
 as = map Action
 myState = (State ([4,4,4,4,4,4,0],[4,4,4,4,4,4,0]) (as [0,1,2,3,4,5],as [0,1,2,3,4,5]))
-myBoard = ([4,4,4,4,4,4,0], [8..14])
+myState = (State ([4,4,0,5,5,5,1],[4,4,4,4,4,4,0]) (as [0,1,2,3,4,5],as [0,1,2,3,4,5]))
+myBoard = ([4,4,0,5,5,5,1], [4,4,4,4,4,4,0])
 getResults myBoard (as[0,1,2,3,4,5]) 6
 getScores myBoard (as[0..5])
--}
-
-{- 
-
-		int bestCaseIndex = 0;
-		int temp = 0;
-		for(int i = 0; i < avail.length; i++) {
-			temp = play(board[i]);
-			if(temp > board[bestCaseIndex]) {
-				bestCaseIndex = i;
-			}
-		}
-		return (Action) bestCaseIndex;
 -}
