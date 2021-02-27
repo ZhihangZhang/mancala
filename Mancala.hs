@@ -16,7 +16,7 @@ data State = State InternalState ([Action], [Action])
          deriving (Ord, Eq, Show)
 
 data Result = EndOfGame Int State    -- end of game: value, starting state
-            | EndOfTurn State        -- the other player continues 
+            | EndOfTurn Int State        -- the other player continues 
             | ContinueTurn State        -- current player takes another turn 
          deriving (Eq, Show)
 type Game = Action -> State -> Result
@@ -32,13 +32,14 @@ mancala_start = State board_start actions_start
 mancala move (State (my_side, other_side) (my_actions, other_actions))
   | end = EndOfGame (win b3) mancala_start
   | extra_turn = ContinueTurn (State b3 avail) -- extra turn, no need to swap sides and available actions
-  | otherwise = EndOfTurn (State (swap b3) (swap avail)) -- opponent's turn, swap sides and available actions 
+  | otherwise = EndOfTurn val (State (swap b3) (swap avail)) -- opponent's turn, swap sides and available actions 
   where 
     (b1, end_index) = move_pieces move (my_side, other_side) 
     b2 = capture_pieces end_index (my_side, other_side) b1 
     (b3, end) = collect_pieces b2
     avail = avail_actions b3 
     extra_turn = end_index == (length $ get_pockets my_side)
+    val = val_board b3 
 -- Tests
 -- 1. end of turn
 -- *Mancala> mancala_start
@@ -322,13 +323,14 @@ collect_pieces_helper (my_side, other_side) = updated_board
 one_side_clear :: Board -> Bool
 one_side_clear (my_side, other_side) = 
   all (== 0) (get_pockets my_side) || all (== 0) (get_pockets other_side)
--- TODO: tests
 
 -- Determine who wins given a board that has been fully updated (i.e., after
 -- pieces are moved, captured, and collected) 
 -- return an int, it is positive if I win, or negative if the opponent wins
---win :: Board -> Int
+win :: Board -> Int
 win (my_side, other_side) = get_store my_side - get_store other_side
+
+val_board b = win b
 
 -- Given a board return the available actions
 avail_actions :: Board -> ([Action], [Action])
@@ -364,39 +366,4 @@ actionize = map Action
 -- a simple player that always chooses the first in the availble actions 
 simple_player :: Player
 simple_player (State _ (avail, _)) = head avail
-
--- TODO: remove these
--- Thoughts on implementation:
---
--- mancala :: Game 
--- - move stones counterclockwise + possibly capture
---      - empty the selected pocket (aka Action)
---      - update stone count in pockets couterclockwise (include the player's own store, but
---      skip opponent's)
---      - possibly capture opponent's stones if the last stone ends up in an
---      empty pocket on our side
--- - update available actions for both players (aka indices of non-empty pockets)
--- - determine the result of the turn
---      - end of game? (remeber to collect any remaining pieces)
---         - TODO: integrate with Play
---         - if (get_pockets(mySide) == 0 && get_pockets(otherSide) == 0)
---         - return get_store(mySide) > get_store(OtherSide)? myVictory:otherVictory
---      - end of turn?
---      - another turn because the last piece ends up in the store?
---
--- simple_player :: Player
--- - make the move that brings the greatest number of stones into his/her store
--- 
--- mm_player :: Player
--- - pretty much the same as Minimax, the only difference being a player can
---      take multiple turns (thus we need to change the value function)
---      - Think we have to go with the "try every move" approach. Search space shouldn't be too large.
---
--- IO stuff
--- - we can modify Play.hs so that a player can take multiple turns
-
-
-
-
-
 

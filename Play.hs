@@ -6,7 +6,7 @@ module Play where
 
 import Mancala
 
-import Minimax
+import Greedy
 --import Minimax_mem
 import System.IO
 import Text.Read   (readMaybe)
@@ -25,9 +25,9 @@ play game start_state opponent ts =
       line <- getLine
       if line == "0"
         then
-            person_play game (EndOfTurn start_state) opponent ts --Every ContinueGame has been replaced with EndOfGame
+            person_play game (EndOfTurn 0 start_state) opponent ts --Every ContinueGame has been replaced with EndOfGame
         else if line ==  "1"
-             then computer_play game (EndOfTurn start_state) opponent ts
+             then computer_play game (EndOfTurn 0 start_state) opponent ts
         else if line == "2"
             then return ts
         else play game start_state opponent ts
@@ -39,7 +39,7 @@ person_play game (EndOfGame val start_state) opponent ts =
     newts <- update_tournament_state (-val) ts  -- val is value to computer; -val is value for person
     play game start_state opponent newts
 
-person_play game (EndOfTurn state) opponent ts =
+person_play game (EndOfTurn val state) opponent ts =
    do
       let State internal (avail, _) = state
       putStrLn ("State: "++show internal++" choose one of "++show avail)
@@ -48,7 +48,7 @@ person_play game (EndOfTurn state) opponent ts =
       if (action == Nothing) || not ((fromJust action) `elem` avail)
         then do  -- error; redo
            putStrLn ("Invalid choice, try again...")
-           person_play game (EndOfTurn state) opponent ts
+           person_play game (EndOfTurn val state) opponent ts
         else
            coordinate_next_play game (game (fromJust action) state) opponent ts person_play computer_play
 
@@ -75,7 +75,7 @@ computer_play game (EndOfGame val start_state) opponent ts =
       newts <- update_tournament_state val ts
       play game start_state opponent newts
 
-computer_play game (EndOfTurn state) opponent ts =
+computer_play game (EndOfTurn _ state) opponent ts =
       let 
           opponent_move = opponent state
           State internal _ = state
@@ -102,9 +102,9 @@ coordinate_next_play game (EndOfGame val start_state) opponent ts my_play other_
     other_play game (EndOfGame val start_state) opponent ts
 
 -- my turn ends, pass to the other player
-coordinate_next_play game (EndOfTurn state) opponent ts my_play other_play =
+coordinate_next_play game (EndOfTurn val state) opponent ts my_play other_play =
   do
-    other_play game (EndOfTurn state) opponent ts
+    other_play game (EndOfTurn val state) opponent ts
 
 -- I got an extra turn, pass to myself 
 coordinate_next_play game (ContinueTurn state) opponent ts my_play other_play =
@@ -126,4 +126,4 @@ update_tournament_state val (wins,losses,ties)
 
 -- If you imported Mancala here and in Minimax try:
 -- play mancala mancala_start simple_player (0,0,0)
--- TODO: implement Minimax for mancala
+-- play mancala mancala_start greedy_player (0,0,0)
