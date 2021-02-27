@@ -126,4 +126,4 @@ update_tournament_state val (wins,losses,ties)
 
 -- If you imported Mancala here and in Minimax try:
 -- play mancala mancala_start simple_player (0,0,0)
--- play mancala mancala_start greedy_player (0,0,0)
+-- play mancala mancala_start (greedy_player mancala) (0,0,0)
