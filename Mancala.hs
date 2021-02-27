@@ -13,7 +13,7 @@ type InternalState = Board
 data Action = Action Int -- index of a selected pocket (non-empty)
          deriving (Ord,Eq)
 data State = State InternalState ([Action], [Action])
-         deriving (Ord, Eq, Show)
+         deriving (Ord, Eq)
 
 data Result = EndOfGame Int State    -- end of game: value, starting state
             | EndOfTurn Int State        -- the other player continues 
@@ -356,6 +356,11 @@ instance Show Action where
     show (Action i) = show i
 instance Read Action where
     readsPrec i st =  [(Action a,rst) | (a,rst) <- readsPrec i st]
+instance Show State where
+    show (State (my_side, other_side) _) = first_line ++ "\n" ++ second_line
+      where 
+       first_line = show $ reverse other_side
+       second_line = show my_side
 
 -- Helpers for testing in the repl
 actionize :: [Int] -> [Action]

@@ -41,8 +41,8 @@ person_play game (EndOfGame val start_state) opponent ts =
 
 person_play game (EndOfTurn val state) opponent ts =
    do
-      let State internal (avail, _) = state
-      putStrLn ("State: "++show internal++" choose one of "++show avail)
+      let State _ (avail, _) = state
+      putStrLn ("State:\n"++show state++"\nChoose one of "++show avail)
       line <- getLine
       let action = (readMaybe line :: Maybe Action)
       if (action == Nothing) || not ((fromJust action) `elem` avail)
@@ -54,9 +54,9 @@ person_play game (EndOfTurn val state) opponent ts =
 
 person_play game (ContinueTurn state) opponent ts =
    do
-      let State internal (avail, _) = state
+      let State _ (avail, _) = state
       putStrLn ("You got an extra turn!")
-      putStrLn ("State: "++show internal++" choose one of "++show avail)
+      putStrLn ("State:\n"++show state++"\nChoose one of "++show avail)
       line <- getLine
       let action = (readMaybe line :: Maybe Action)
       if (action == Nothing) || not ((fromJust action) `elem` avail)
@@ -78,7 +78,6 @@ computer_play game (EndOfGame val start_state) opponent ts =
 computer_play game (EndOfTurn _ state) opponent ts =
       let 
           opponent_move = opponent state
-          State internal _ = state
         in
           do
             putStrLn ("The computer chose "++show opponent_move)
@@ -87,10 +86,9 @@ computer_play game (EndOfTurn _ state) opponent ts =
 computer_play game (ContinueTurn state) opponent ts =
       let 
           opponent_move = opponent state
-          State internal _ = state
         in
           do
-            putStrLn ("Computer got an extra turn!")
+            putStrLn ("The computer got an extra turn!")
             putStrLn ("The computer chose "++show opponent_move)
             coordinate_next_play game (game opponent_move state) opponent ts computer_play person_play
 
