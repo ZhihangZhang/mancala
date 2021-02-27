@@ -1,5 +1,6 @@
 module Mancala where
 import Data.Tuple (swap)
+import Data.List
 
 -- To run it, try:
 -- ghci
@@ -359,8 +360,15 @@ instance Read Action where
 instance Show State where
     show (State (my_side, other_side) _) = first_line ++ "\n" ++ second_line
       where 
-       first_line = show $ reverse other_side
-       second_line = show my_side
+        other_pockets = intercalate " " $ map show $ reverse $ get_pockets other_side 
+        other_store = "*" ++ show (get_store other_side) ++ "* "
+        first_line = other_store ++ other_pockets  
+        my_pockets = intercalate " " $ map show $ get_pockets my_side 
+        my_store = " *" ++ show (get_store my_side) ++ "*"
+        second_line = my_pockets ++ my_store
+
+        
+        
 
 -- Helpers for testing in the repl
 actionize :: [Int] -> [Action]

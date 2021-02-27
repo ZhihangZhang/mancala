@@ -42,7 +42,9 @@ person_play game (EndOfGame val start_state) opponent ts =
 person_play game (EndOfTurn val state) opponent ts =
    do
       let State _ (avail, _) = state
-      putStrLn ("State:\n"++show state++"\nChoose one of "++show avail)
+      putStrLn ("State:")
+      putStrLn (show state)
+      putStrLn ("Choose one of "++show avail)
       line <- getLine
       let action = (readMaybe line :: Maybe Action)
       if (action == Nothing) || not ((fromJust action) `elem` avail)
@@ -56,7 +58,9 @@ person_play game (ContinueTurn state) opponent ts =
    do
       let State _ (avail, _) = state
       putStrLn ("You got an extra turn!")
-      putStrLn ("State:\n"++show state++"\nChoose one of "++show avail)
+      putStrLn ("State:")
+      putStrLn (show state)
+      putStrLn ("Choose one of "++show avail)
       line <- getLine
       let action = (readMaybe line :: Maybe Action)
       if (action == Nothing) || not ((fromJust action) `elem` avail)
